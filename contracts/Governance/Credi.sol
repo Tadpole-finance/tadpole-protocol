@@ -236,7 +236,7 @@ contract Credi {
 
         balances[src] = sub96(balances[src], amount, "Comp::_transferTokens: transfer amount exceeds balance");
         if(dst != address(0)) balances[dst] = add96(balances[dst], amount, "Comp::_transferTokens: transfer amount overflows");
-        else totalSupply -= totalSupply;
+        else totalSupply -= amount;
         
         emit Transfer(src, dst, amount);
 
