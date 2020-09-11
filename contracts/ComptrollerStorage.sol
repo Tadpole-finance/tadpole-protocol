@@ -131,5 +131,5 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
 
 contract ComptrollerCrediStorage is ComptrollerV3Storage{
     Factory public factory;
-    uint256 public newMarketCompFee;
+    uint256 public newMarketCompFee = 100e18;
 }

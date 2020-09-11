@@ -63,7 +63,7 @@ contract CTokenStorage {
     /**
      * @notice Fraction of interest currently set aside for reserves
      */
-    uint public reserveFactorMantissa;
+    uint public reserveFactorMantissa = 0.2e18; //0.2
 
     /**
      * @notice Block number that interest was last accrued at
