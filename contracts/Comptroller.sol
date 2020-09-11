@@ -7,13 +7,14 @@ import "./PriceOracle.sol";
 import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
-import "./Governance/Comp.sol";
+import "./Governance/Credi.sol";
+import "./Factory.sol";
 
 /**
  * @title Compound's Comptroller Contract
  * @author Compound
  */
-contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerErrorReporter, Exponential {
+contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, ComptrollerErrorReporter, Exponential {
     /// @notice Emitted when an admin supports a market
     event MarketListed(CToken cToken);
 
@@ -989,6 +990,54 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
     }
 
     /**
+      * @notice create market from ERC20 underlying and add it to the markets mapping and set it as listed
+      * @dev function to create cErc20, set isListed and add support for the market
+      * @param _erc20Address The address of underlying erc20 to list
+      * @return uint 0=success, otherwise a failure. (See enum Error for details)
+      */
+
+    function createMarket(address _erc20Address) external returns (uint){
+        Credi comp = Credi(getCompAddress());
+        comp.transferFrom(msg.sender, address(0), newMarketCompFee);
+
+        address cerc20Delegator = factory.createCErc20Delegator(_erc20Address, this);
+        CToken cToken = CToken(cerc20Delegator);
+
+        cToken.isCToken(); // Sanity check to make sure its really a CToken
+
+        markets[address(cToken)] = Market({isListed: true, isComped: false, collateralFactorMantissa: 0});
+
+        _addMarketInternal(address(cToken));
+
+        emit MarketListed(cToken);
+
+        return uint(Error.NO_ERROR);
+    }
+
+    /**
+      * @notice set newMarketCompFee
+      * @dev Admin function to set newMarketCompFee
+      * @param _newMarketCompFee uint256 to set newMarketCompFee
+      */
+    function _setNewMarketCompFee(uint256 _newMarketCompFee) public {
+        require(msg.sender==admin, "not allowed");
+        require(_newMarketCompFee > 0, "_newMarketCompFee is empty");
+        newMarketCompFee = _newMarketCompFee;
+    }
+
+    /**
+      * @notice set factory
+      * @dev Admin function to set factory
+      * @param _factory address of the new factory
+      */
+    function _setFactory(Factory _factory) public{
+        require(msg.sender==admin, "not allowed");
+        require(_factory.isFactory() == true, "invalid factory");
+        
+        factory = _factory;
+    }
+
+    /**
       * @notice Add the market to the markets mapping and set it as listed
       * @dev Admin function to set isListed and add support for the market
       * @param cToken The address of the market (token) to list
@@ -1096,6 +1145,45 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
     /*** Comp Distribution ***/
 
     /**
+     * @notice Admin function to update COMP speeds for a specific market
+     * @param cToken The market to enter
+     * @param compSpeedMantissa compRate to be distributed to this market, scaled by 1e18
+     * @return uint 0=success, otherwise a failure. (See enum Error for details)
+     */
+    function _setCompSpeed(CToken cToken, uint256 compSpeedMantissa) public{
+        require(msg.sender == admin, "only admin can set CompSpeeds");
+
+        require(markets[address(cToken)].isListed == true, "market is not listed");
+        require(markets[address(cToken)].isComped == true, "market is not comped");
+
+        refreshCompSpeedsInternal();
+
+        uint256 newSpeed = compSpeedMantissa;
+
+        compSpeeds[address(cToken)] = newSpeed;
+
+        uint256 newTotalCompRate_;
+
+        for (uint i = 0; i < allMarkets.length; i++) {
+            if (markets[address(allMarkets[i])].isComped) {
+                newTotalCompRate_ += compSpeeds[address(allMarkets[i])];
+            }
+        }
+        
+        //revert all changes if sum of compSpeeds exceeds compRate
+        require(newTotalCompRate_ <= compRate, "SUM of compSpeeds exceeds compRate");
+        
+        uint oldRate = compRate;
+        compRate = newTotalCompRate_;
+
+        refreshCompSpeedsInternal();
+
+        emit NewCompRate(oldRate, compRate);
+        emit CompSpeedUpdated(cToken, newSpeed);
+        
+    }
+
+    /**
      * @notice Recalculate and update COMP speeds for all COMP markets
      */
     function refreshCompSpeeds() public {
@@ -1104,6 +1192,9 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
     }
 
     function refreshCompSpeedsInternal() internal {
+        
+        //temporary disabled
+
         CToken[] memory allMarkets_ = allMarkets;
 
         for (uint i = 0; i < allMarkets_.length; i++) {
@@ -1113,24 +1204,24 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
             updateCompBorrowIndex(address(cToken), borrowIndex);
         }
 
-        Exp memory totalUtility = Exp({mantissa: 0});
-        Exp[] memory utilities = new Exp[](allMarkets_.length);
-        for (uint i = 0; i < allMarkets_.length; i++) {
-            CToken cToken = allMarkets_[i];
-            if (markets[address(cToken)].isComped) {
-                Exp memory assetPrice = Exp({mantissa: oracle.getUnderlyingPrice(cToken)});
-                Exp memory utility = mul_(assetPrice, cToken.totalBorrows());
-                utilities[i] = utility;
-                totalUtility = add_(totalUtility, utility);
-            }
-        }
+        // Exp memory totalUtility = Exp({mantissa: 0});
+        // Exp[] memory utilities = new Exp[](allMarkets_.length);
+        // for (uint i = 0; i < allMarkets_.length; i++) {
+        //     CToken cToken = allMarkets_[i];
+        //     if (markets[address(cToken)].isComped) {
+        //         Exp memory assetPrice = Exp({mantissa: oracle.getUnderlyingPrice(cToken)});
+        //         Exp memory utility = mul_(assetPrice, cToken.totalBorrows());
+        //         utilities[i] = utility;
+        //         totalUtility = add_(totalUtility, utility);
+        //     }
+        // }
 
-        for (uint i = 0; i < allMarkets_.length; i++) {
-            CToken cToken = allMarkets[i];
-            uint newSpeed = totalUtility.mantissa > 0 ? mul_(compRate, div_(utilities[i], totalUtility)) : 0;
-            compSpeeds[address(cToken)] = newSpeed;
-            emit CompSpeedUpdated(cToken, newSpeed);
-        }
+        // for (uint i = 0; i < allMarkets_.length; i++) {
+        //     CToken cToken = allMarkets[i];
+        //     uint newSpeed = totalUtility.mantissa > 0 ? mul_(compRate, div_(utilities[i], totalUtility)) : 0;
+        //     compSpeeds[address(cToken)] = newSpeed;
+        //     emit CompSpeedUpdated(cToken, newSpeed);
+        // }
     }
 
     /**
@@ -1233,7 +1324,7 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
      */
     function transferComp(address user, uint userAccrued, uint threshold) internal returns (uint) {
         if (userAccrued >= threshold && userAccrued > 0) {
-            Comb comp = Comb(getCompAddress());
+            Credi comp = Credi(getCompAddress());
             uint compRemaining = comp.balanceOf(address(this));
             if (userAccrued <= compRemaining) {
                 comp.transfer(user, userAccrued);
@@ -1296,13 +1387,15 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
      * @param compRate_ The amount of COMP wei per block to distribute
      */
     function _setCompRate(uint compRate_) public {
-        require(adminOrInitializing(), "only admin can change comp rate");
+        compRate_; //zzz
+        revert("temporary disabled");
+        // require(adminOrInitializing(), "only admin can change comp rate");
 
-        uint oldRate = compRate;
-        compRate = compRate_;
-        emit NewCompRate(oldRate, compRate_);
+        // uint oldRate = compRate;
+        // compRate = compRate_;
+        // emit NewCompRate(oldRate, compRate_);
 
-        refreshCompSpeedsInternal();
+        // refreshCompSpeedsInternal();
     }
 
     /**
@@ -1376,6 +1469,6 @@ contract Comptroller is ComptrollerV3Storage, ComptrollerInterface, ComptrollerE
      * @return The address of COMP
      */
     function getCompAddress() public view returns (address) {
-        return 0xc00e94Cb662C3520282E6f5717214004A7f26888;
+        return 0x83542A5E88d2C44C6729EfFfE772AD973829360C;
     }
 }

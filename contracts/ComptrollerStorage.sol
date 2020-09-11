@@ -2,6 +2,7 @@ pragma solidity ^0.5.16;
 
 import "./CToken.sol";
 import "./PriceOracle.sol";
+import "./Factory.sol";
 
 contract UnitrollerAdminStorage {
     /**
@@ -126,4 +127,9 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
 
     /// @notice The COMP accrued but not yet transferred to each user
     mapping(address => uint) public compAccrued;
+}
+
+contract ComptrollerCrediStorage is ComptrollerV3Storage{
+    Factory public factory;
+    uint256 public newMarketCompFee;
 }

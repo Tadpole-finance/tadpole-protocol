@@ -1,18 +1,18 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
-contract Comb {
+contract Credi {
     /// @notice EIP-20 token name for this token
-    string public constant name = "Combi";
+    string public constant name = "Credi";
 
     /// @notice EIP-20 token symbol for this token
-    string public constant symbol = "COMB";
+    string public constant symbol = "CDI";
 
     /// @notice EIP-20 token decimals for this token
     uint8 public constant decimals = 18;
 
     /// @notice Total number of tokens in circulation
-    uint public constant totalSupply = 10000000e18; // 10 million Comp
+    uint public totalSupply = 10000000e18; // 10 million Comp
 
     /// @notice Allowance amounts on behalf of others
     mapping (address => mapping (address => uint96)) internal allowances;
@@ -232,10 +232,12 @@ contract Comb {
 
     function _transferTokens(address src, address dst, uint96 amount) internal {
         require(src != address(0), "Comp::_transferTokens: cannot transfer from the zero address");
-        require(dst != address(0), "Comp::_transferTokens: cannot transfer to the zero address");
+        //require(dst != address(0), "Comp::_transferTokens: cannot transfer to the zero address");
 
         balances[src] = sub96(balances[src], amount, "Comp::_transferTokens: transfer amount exceeds balance");
-        balances[dst] = add96(balances[dst], amount, "Comp::_transferTokens: transfer amount overflows");
+        if(dst != address(0)) balances[dst] = add96(balances[dst], amount, "Comp::_transferTokens: transfer amount overflows");
+        else totalSupply -= totalSupply;
+        
         emit Transfer(src, dst, amount);
 
         _moveDelegates(delegates[src], delegates[dst], amount);
