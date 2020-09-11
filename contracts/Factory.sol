@@ -13,7 +13,7 @@ contract Factory is Ownable {
     address cErc20DelegatorImplementation;
     uint8 constant CErc20Decimal = 8;
     string constant CErc20PrefixName = "Credi ";
-    string constant CErc20PrefixSymbol = "c";
+    string constant CErc20PrefixSymbol = "cr";
     bool constant public isFactory = true;
 
 
