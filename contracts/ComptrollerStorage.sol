@@ -3,6 +3,7 @@ pragma solidity ^0.5.16;
 import "./CToken.sol";
 import "./PriceOracle.sol";
 import "./Factory.sol";
+import "./CollateralModel.sol";
 
 contract UnitrollerAdminStorage {
     /**
@@ -65,7 +66,7 @@ contract ComptrollerV2Storage is ComptrollerV1Storage {
          *  For instance, 0.9 to allow borrowing 90% of collateral value.
          *  Must be between 0 and 1, and stored as a mantissa.
          */
-        uint collateralFactorMantissa;
+        // uint collateralFactorMantissa;
 
         /// @notice Per-market mapping of "accounts in this asset"
         mapping(address => bool) accountMembership;
@@ -132,4 +133,5 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
 contract ComptrollerCrediStorage is ComptrollerV3Storage{
     Factory public factory;
     uint256 public newMarketCompFee = 100e18;
+    CollateralModel public collateralModel;
 }

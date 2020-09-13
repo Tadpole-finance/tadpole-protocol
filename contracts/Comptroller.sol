@@ -28,7 +28,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
     event NewCloseFactor(uint oldCloseFactorMantissa, uint newCloseFactorMantissa);
 
     /// @notice Emitted when a collateral factor is changed by admin
-    event NewCollateralFactor(CToken cToken, uint oldCollateralFactorMantissa, uint newCollateralFactorMantissa);
+    // event NewCollateralFactor(CToken cToken, uint oldCollateralFactorMantissa, uint newCollateralFactorMantissa);
 
     /// @notice Emitted when liquidation incentive is changed by admin
     event NewLiquidationIncentive(uint oldLiquidationIncentiveMantissa, uint newLiquidationIncentiveMantissa);
@@ -731,7 +731,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
             if (oErr != 0) { // semi-opaque error code, we assume NO_ERROR == 0 is invariant between upgrades
                 return (Error.SNAPSHOT_ERROR, 0, 0);
             }
-            vars.collateralFactor = Exp({mantissa: markets[address(asset)].collateralFactorMantissa});
+            vars.collateralFactor = Exp({mantissa: getcollateralFactorMantissa(address(asset))});
             vars.exchangeRate = Exp({mantissa: vars.exchangeRateMantissa});
 
             // Get the normalized price of the asset
@@ -899,40 +899,40 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
       * @param newCollateralFactorMantissa The new collateral factor, scaled by 1e18
       * @return uint 0=success, otherwise a failure. (See ErrorReporter for details)
       */
-    function _setCollateralFactor(CToken cToken, uint newCollateralFactorMantissa) external returns (uint) {
-        // Check caller is admin
-        if (msg.sender != admin) {
-            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COLLATERAL_FACTOR_OWNER_CHECK);
-        }
+    // function _setCollateralFactor(CToken cToken, uint newCollateralFactorMantissa) external returns (uint) {
+    //     // Check caller is admin
+    //     if (msg.sender != admin) {
+    //         return fail(Error.UNAUTHORIZED, FailureInfo.SET_COLLATERAL_FACTOR_OWNER_CHECK);
+    //     }
 
-        // Verify market is listed
-        Market storage market = markets[address(cToken)];
-        if (!market.isListed) {
-            return fail(Error.MARKET_NOT_LISTED, FailureInfo.SET_COLLATERAL_FACTOR_NO_EXISTS);
-        }
+    //     // Verify market is listed
+    //     Market storage market = markets[address(cToken)];
+    //     if (!market.isListed) {
+    //         return fail(Error.MARKET_NOT_LISTED, FailureInfo.SET_COLLATERAL_FACTOR_NO_EXISTS);
+    //     }
 
-        Exp memory newCollateralFactorExp = Exp({mantissa: newCollateralFactorMantissa});
+    //     Exp memory newCollateralFactorExp = Exp({mantissa: newCollateralFactorMantissa});
 
-        // Check collateral factor <= 0.9
-        Exp memory highLimit = Exp({mantissa: collateralFactorMaxMantissa});
-        if (lessThanExp(highLimit, newCollateralFactorExp)) {
-            return fail(Error.INVALID_COLLATERAL_FACTOR, FailureInfo.SET_COLLATERAL_FACTOR_VALIDATION);
-        }
+    //     // Check collateral factor <= 0.9
+    //     Exp memory highLimit = Exp({mantissa: collateralFactorMaxMantissa});
+    //     if (lessThanExp(highLimit, newCollateralFactorExp)) {
+    //         return fail(Error.INVALID_COLLATERAL_FACTOR, FailureInfo.SET_COLLATERAL_FACTOR_VALIDATION);
+    //     }
 
-        // If collateral factor != 0, fail if price == 0
-        if (newCollateralFactorMantissa != 0 && oracle.getUnderlyingPrice(cToken) == 0) {
-            return fail(Error.PRICE_ERROR, FailureInfo.SET_COLLATERAL_FACTOR_WITHOUT_PRICE);
-        }
+    //     // If collateral factor != 0, fail if price == 0
+    //     if (newCollateralFactorMantissa != 0 && oracle.getUnderlyingPrice(cToken) == 0) {
+    //         return fail(Error.PRICE_ERROR, FailureInfo.SET_COLLATERAL_FACTOR_WITHOUT_PRICE);
+    //     }
 
-        // Set market's collateral factor to new collateral factor, remember old value
-        uint oldCollateralFactorMantissa = market.collateralFactorMantissa;
-        market.collateralFactorMantissa = newCollateralFactorMantissa;
+    //     // Set market's collateral factor to new collateral factor, remember old value
+    //     uint oldCollateralFactorMantissa = market.collateralFactorMantissa;
+    //     market.collateralFactorMantissa = newCollateralFactorMantissa;
 
-        // Emit event with asset, old collateral factor, and new collateral factor
-        emit NewCollateralFactor(cToken, oldCollateralFactorMantissa, newCollateralFactorMantissa);
+    //     // Emit event with asset, old collateral factor, and new collateral factor
+    //     emit NewCollateralFactor(cToken, oldCollateralFactorMantissa, newCollateralFactorMantissa);
 
-        return uint(Error.NO_ERROR);
-    }
+    //     return uint(Error.NO_ERROR);
+    // }
 
     /**
       * @notice Sets maxAssets which controls how many markets can be entered
@@ -1005,7 +1005,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
 
         cToken.isCToken(); // Sanity check to make sure its really a CToken
 
-        markets[address(cToken)] = Market({isListed: true, isComped: false, collateralFactorMantissa: 0});
+        markets[address(cToken)] = Market({isListed: true, isComped: false});
 
         _addMarketInternal(address(cToken));
 
@@ -1054,7 +1054,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
 
         cToken.isCToken(); // Sanity check to make sure its really a CToken
 
-        markets[address(cToken)] = Market({isListed: true, isComped: false, collateralFactorMantissa: 0});
+        markets[address(cToken)] = Market({isListed: true, isComped: false});
 
         _addMarketInternal(address(cToken));
 
@@ -1458,6 +1458,31 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
      */
     function getAllMarkets() public view returns (CToken[] memory) {
         return allMarkets;
+    }
+
+    /**
+     * @notice Return collateralFactor of a cToken
+     * @dev get the collateralFactor stored in CollateralModel
+     * @param cToken The address of the market to drop
+     * @return uint collateralFactor
+     */
+    function getcollateralFactorMantissa(address cToken) public view returns(uint){
+        return collateralModel.getCollateral(cToken);
+    }
+
+    /**
+     * @notice admin function to set collateralModel
+     * @dev set collateralModel
+     * @param _collateralModel address of collateralModel
+     */
+    function _setCollateralModel(CollateralModel _collateralModel) public{
+        // Check caller is admin
+        require(msg.sender == admin, "UNAUTHORIZED");
+
+        require(_collateralModel.isCollateralModel() == true, "invalid CollateralModel");
+
+        collateralModel = _collateralModel;
+        
     }
 
     function getBlockNumber() public view returns (uint) {
