@@ -7,7 +7,7 @@ import "./ComptrollerStorage.sol";
  * @dev Storage for the comptroller is at this address, while execution is delegated to the `comptrollerImplementation`.
  * CTokens should reference this contract as their comptroller.
  */
-contract Unitroller is UnitrollerAdminStorage, ComptrollerErrorReporter {
+contract Unitroller is ComptrollerCrediStorage, ComptrollerErrorReporter {
 
     /**
       * @notice Emitted when pendingComptrollerImplementation is changed

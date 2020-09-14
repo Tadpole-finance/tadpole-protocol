@@ -5,7 +5,7 @@ import "./CErc20.sol";
 import "./CErc20Delegator.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
 
-contract Factory is Ownable {
+contract CTokenFactory is Ownable {
 
     address[] public createdCErc20Delegator;
 

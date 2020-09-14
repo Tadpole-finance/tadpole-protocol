@@ -2,7 +2,7 @@ pragma solidity ^0.5.16;
 
 import "./CToken.sol";
 import "./PriceOracle.sol";
-import "./Factory.sol";
+import "./CTokenFactory.sol";
 import "./CollateralModel.sol";
 
 contract UnitrollerAdminStorage {
@@ -131,7 +131,10 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
 }
 
 contract ComptrollerCrediStorage is ComptrollerV3Storage{
-    Factory public factory;
+    CTokenFactory public cTokenFactory;
     uint256 public newMarketCompFee = 100e18;
     CollateralModel public collateralModel;
+    
+    /// @notice A list of all underlying
+    address[] public allUnderlying;
 }

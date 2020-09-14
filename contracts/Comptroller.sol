@@ -8,7 +8,7 @@ import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
 import "./Governance/Credi.sol";
-import "./Factory.sol";
+import "./CTokenFactory.sol";
 
 /**
  * @title Compound's Comptroller Contract
@@ -1000,7 +1000,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
         Credi comp = Credi(getCompAddress());
         comp.transferFrom(msg.sender, address(0), newMarketCompFee);
 
-        address cerc20Delegator = factory.createCErc20Delegator(_erc20Address, this);
+        address cerc20Delegator = cTokenFactory.createCErc20Delegator(_erc20Address, this);
         CToken cToken = CToken(cerc20Delegator);
 
         cToken.isCToken(); // Sanity check to make sure its really a CToken
@@ -1030,11 +1030,11 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
       * @dev Admin function to set factory
       * @param _factory address of the new factory
       */
-    function _setFactory(Factory _factory) public{
+    function _setFactory(CTokenFactory _factory) public{
         require(msg.sender==admin, "not allowed");
         require(_factory.isFactory() == true, "invalid factory");
         
-        factory = _factory;
+        cTokenFactory = _factory;
     }
 
     /**
@@ -1067,7 +1067,14 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
         for (uint i = 0; i < allMarkets.length; i ++) {
             require(allMarkets[i] != CToken(cToken), "market already added");
         }
+
+        //make sure the same underlying only be added once
+        for (uint i = 0; i < allUnderlying.length; i ++) {
+            require(allUnderlying[i] != CToken(cToken).underlying(), "underlying already added");
+        }
+        
         allMarkets.push(CToken(cToken));
+        allUnderlying.push(CToken(cToken).underlying());
     }
 
     /**
