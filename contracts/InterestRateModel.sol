@@ -1,12 +1,17 @@
 pragma solidity ^0.5.16;
 
+contract InterestRateModelStorage{
+    /// @notice Indicator that this is an InterestRateModel contract (for inspection)
+    bool public constant isInterestRateModel = true;
+}
+
+
 /**
   * @title Compound's InterestRateModel Interface
   * @author Compound
   */
-contract InterestRateModel {
-    /// @notice Indicator that this is an InterestRateModel contract (for inspection)
-    bool public constant isInterestRateModel = true;
+
+contract InterestRateModel is InterestRateModelStorage {
 
     /**
       * @notice Calculates the current borrow interest rate per block
