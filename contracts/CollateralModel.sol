@@ -35,12 +35,13 @@ contract CollateralModel is Ownable{
         if(_ctokenDelegatorAddress != address(0)){
             CDelegatorInterface cDelegator = CDelegatorInterface(_ctokenDelegatorAddress);
             cDelegator.implementation(); //sanity check
+            
+            CErc20 cErc20 = CErc20(_ctokenDelegatorAddress);
+            require(cErc20.isCToken() == true, "implementation address is invalid");
         }
         
-        CErc20 cErc20 = CErc20(_ctokenDelegatorAddress);
-        require(cErc20.isCToken() == true, "implementation address is invalid");
         
-        require(_collateral > 0.9e18, "collateral is too big");
+        require(_collateral <= 0.9e18, "collateral is too big");
         
         collateralSetups[_ctokenDelegatorAddress] = collateralSetup(_collateral, true);
     }
