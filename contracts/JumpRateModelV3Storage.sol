@@ -2,8 +2,7 @@ pragma solidity ^0.5.16;
 
 contract JumpRateModelV3Storage{
 
-    bool initiated;
-    bool public isJumpRateModelV3 = true;
+    bool public constant isJumpRateModelV3 = true;
 
     address public admin;
     address public pendingAdmin;

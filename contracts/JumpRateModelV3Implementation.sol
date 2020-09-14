@@ -15,22 +15,6 @@ contract JumpRateModelV3 is InterestRateModel, JumpRateModelV3Storage {
     event NewInterestParams(uint baseRatePerBlock, uint multiplierPerBlock, uint jumpMultiplierPerBlock, uint kink);
 
     /**
-     * @notice Construct an interest rate model
-     * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by 1e18)
-     * @param multiplierPerYear The rate of increase in interest rate wrt utilization (scaled by 1e18)
-     * @param jumpMultiplierPerYear The multiplierPerBlock after hitting a specified utilization point
-     * @param kink_ The utilization point at which the jump multiplier is applied
-     * @param owner_ The address of the owner, i.e. the Timelock contract (which has the ability to update parameters directly)
-     */
-    function initiate(uint baseRatePerYear, uint multiplierPerYear, uint jumpMultiplierPerYear, uint kink_, address owner_) public {
-        owner = owner_;
-        require(initiated==false, "contract is already initiated");
-        initiated = true;
-
-        updateJumpRateModelInternal(baseRatePerYear,  multiplierPerYear, jumpMultiplierPerYear, kink_);
-    }
-
-    /**
      * @notice Update the parameters of the interest rate model (only callable by owner, i.e. Timelock)
      * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by 1e18)
      * @param multiplierPerYear The rate of increase in interest rate wrt utilization (scaled by 1e18)

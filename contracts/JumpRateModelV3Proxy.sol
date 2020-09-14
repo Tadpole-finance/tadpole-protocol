@@ -4,11 +4,12 @@ import "./InterestRateModel.sol";
 import "./JumpRateModelV3Storage.sol";
 import "./JumpRateModelV3Implementation.sol";
 /**
- * @title ComptrollerCore
- * @dev Storage for the comptroller is at this address, while execution is delegated to the `comptrollerImplementation`.
- * CTokens should reference this contract as their comptroller.
+ * @title InterestRateProxy
+ * @dev Storage for the InterestRateModel 
  */
-contract InterestRateProxy is InterestRateModel, JumpRateModelV3Storage {
+contract InterestRateProxy is InterestRateModelStorage, JumpRateModelV3Storage {
+    
+    using SafeMath for uint;
 
     /**
       * @notice Emitted when pendingComptrollerImplementation is accepted, which means comptroller implementation is updated
@@ -20,18 +21,20 @@ contract InterestRateProxy is InterestRateModel, JumpRateModelV3Storage {
       */
     event NewAdmin(address oldAdmin, address newAdmin);
 
-    constructor(JumpRateModelV3 newImplementation, uint baseRatePerYear, uint multiplierPerYear, uint jumpMultiplierPerYear, uint kink_, address owner_) public {
+    constructor(JumpRateModelV3 newImplementation, uint baseRatePerYear, uint multiplierPerYear, uint jumpMultiplierPerYear, uint kink_) public {
         // Set admin to caller
         admin = msg.sender;
+        owner = msg.sender;
 
         require(newImplementation.isJumpRateModelV3() == true, "invalid implementation");
-
-        newImplementation.initiate(baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink_, owner_);
-
         implementation = address(newImplementation);
 
-        emit NewImplementation(address(0), implementation);
+        baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
+        multiplierPerBlock = (multiplierPerYear.mul(1e18)).div(blocksPerYear.mul(kink_));
+        jumpMultiplierPerBlock = jumpMultiplierPerYear.div(blocksPerYear);
+        kink = kink_;
 
+        emit NewImplementation(address(0), implementation);
     }
 
     /*** Admin Functions ***/
