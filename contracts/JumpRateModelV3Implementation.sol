@@ -1,47 +1,18 @@
 pragma solidity ^0.5.16;
 
-import "./InterestRateModel.sol";
 import "./SafeMath.sol";
+import "./InterestRateModel.sol";
+import "./JumpRateModelV3Storage.sol";
 
 /**
   * @title Compound's JumpRateModel Contract V2
   * @author Compound (modified by Dharma Labs)
   * @notice Version 2 modifies Version 1 by enabling updateable parameters.
   */
-contract JumpRateModelV3 is InterestRateModel {
+contract JumpRateModelV3 is InterestRateModel, JumpRateModelV3Storage {
     using SafeMath for uint;
 
     event NewInterestParams(uint baseRatePerBlock, uint multiplierPerBlock, uint jumpMultiplierPerBlock, uint kink);
-
-    /**
-     * @notice The address of the owner, i.e. the Timelock contract, which can update parameters directly
-     */
-    address public owner;
-
-    /**
-     * @notice The approximate number of blocks per year that is assumed by the interest rate model
-     */
-    uint public constant blocksPerYear = 2102400;
-
-    /**
-     * @notice The multiplier of utilization rate that gives the slope of the interest rate
-     */
-    uint public multiplierPerBlock;
-
-    /**
-     * @notice The base interest rate which is the y-intercept when utilization rate is 0
-     */
-    uint public baseRatePerBlock;
-
-    /**
-     * @notice The multiplierPerBlock after hitting a specified utilization point
-     */
-    uint public jumpMultiplierPerBlock;
-
-    /**
-     * @notice The utilization point at which the jump multiplier is applied
-     */
-    uint public kink;
 
     /**
      * @notice Construct an interest rate model
@@ -51,8 +22,10 @@ contract JumpRateModelV3 is InterestRateModel {
      * @param kink_ The utilization point at which the jump multiplier is applied
      * @param owner_ The address of the owner, i.e. the Timelock contract (which has the ability to update parameters directly)
      */
-    constructor(uint baseRatePerYear, uint multiplierPerYear, uint jumpMultiplierPerYear, uint kink_, address owner_) public {
+    function initiate(uint baseRatePerYear, uint multiplierPerYear, uint jumpMultiplierPerYear, uint kink_, address owner_) public {
         owner = owner_;
+        require(initiated==false, "contract is already initiated");
+        initiated = true;
 
         updateJumpRateModelInternal(baseRatePerYear,  multiplierPerYear, jumpMultiplierPerYear, kink_);
     }
