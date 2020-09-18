@@ -1,7 +1,7 @@
 {
-  "name": "compound-protocol",
-  "version": "0.2.1",
-  "description": "The Compound Money Market",
+  "name": "tadpole-protocol",
+  "version": "0.3.0",
+  "description": "The Tadpole Money Market",
   "main": "index.js",
   "scripts": {
     "compile": "./script/compile",
@@ -14,8 +14,8 @@
     "test": "./script/test",
     "test:prepare": "NO_RUN=true ./script/test"
   },
-  "repository": "git@github.com:compound-finance/compound-protocol.git",
-  "author": "Compound Finance",
+  "repository": "git@github.com:tadpole-finance/tadpole-protocol.git",
+  "author": "Tadpole Finance",
   "license": "UNLICENSED",
   "devDependencies": {
     "bignumber.js": "8.0.1",
@@ -25,7 +25,8 @@
     "solparse": "^2.2.8"
   },
   "dependencies": {
-    "eth-saddle": "^0.1.17"
+    "eth-saddle": "^0.1.17",
+    "@openzeppelin/contracts": "2.5.0"
   },
   "resolutions": {
     "scrypt.js": "https://registry.npmjs.org/@compound-finance/ethereumjs-wallet/-/ethereumjs-wallet-0.6.3.tgz",

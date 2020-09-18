@@ -2,7 +2,7 @@ pragma solidity ^0.5.16;
 
 import "./PriceOracle.sol";
 import "./CErc20.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract SimplePriceOracle is Ownable, PriceOracle {
     mapping(address => uint) prices;
