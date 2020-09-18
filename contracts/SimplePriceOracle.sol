@@ -2,8 +2,9 @@ pragma solidity ^0.5.16;
 
 import "./PriceOracle.sol";
 import "./CErc20.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
 
-contract SimplePriceOracle is PriceOracle {
+contract SimplePriceOracle is Ownable, PriceOracle {
     mapping(address => uint) prices;
     event PricePosted(address asset, uint previousPriceMantissa, uint requestedPriceMantissa, uint newPriceMantissa);
 
@@ -15,13 +16,13 @@ contract SimplePriceOracle is PriceOracle {
         }
     }
 
-    function setUnderlyingPrice(CToken cToken, uint underlyingPriceMantissa) public {
+    function setUnderlyingPrice(CToken cToken, uint underlyingPriceMantissa) public onlyOwner {
         address asset = address(CErc20(address(cToken)).underlying());
         emit PricePosted(asset, prices[asset], underlyingPriceMantissa, underlyingPriceMantissa);
         prices[asset] = underlyingPriceMantissa;
     }
 
-    function setDirectPrice(address asset, uint price) public {
+    function setDirectPrice(address asset, uint price) public onlyOwner {
         emit PricePosted(asset, prices[asset], price, price);
         prices[asset] = price;
     }
