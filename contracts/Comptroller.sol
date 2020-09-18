@@ -1019,10 +1019,16 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
       * @dev Admin function to set newMarketCompFee
       * @param _newMarketCompFee uint256 to set newMarketCompFee
       */
-    function _setNewMarketCompFee(uint256 _newMarketCompFee) public {
-        require(msg.sender==admin, "not allowed");
+    function _setNewMarketCompFee(uint256 _newMarketCompFee) external returns (uint){
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_NEW_MARKET_OWNER_CHECK);
+        }
+
         require(_newMarketCompFee > 0, "_newMarketCompFee is empty");
         newMarketCompFee = _newMarketCompFee;
+
+        return uint(Error.NO_ERROR);
     }
 
     /**
@@ -1030,11 +1036,17 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
       * @dev Admin function to set factory
       * @param _factory address of the new factory
       */
-    function _setFactory(CTokenFactory _factory) public{
-        require(msg.sender==admin, "not allowed");
+    function _setFactory(CTokenFactory _factory) external returns (uint){
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_FACTORY_OWNER_CHECK);
+        }
+
         require(_factory.isFactory() == true, "invalid factory");
         
         cTokenFactory = _factory;
+
+        return uint(Error.NO_ERROR);
     }
 
     /**
@@ -1157,8 +1169,11 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
      * @param compSpeedMantissa compRate to be distributed to this market, scaled by 1e18
      * @return uint 0=success, otherwise a failure. (See enum Error for details)
      */
-    function _setCompSpeed(CToken cToken, uint256 compSpeedMantissa) public{
-        require(msg.sender == admin, "only admin can set CompSpeeds");
+    function _setCompSpeed(CToken cToken, uint256 compSpeedMantissa) public  returns (uint){
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMP_SPEED_OWNER_CHECK);
+        }
 
         require(markets[address(cToken)].isListed == true, "market is not listed");
         require(markets[address(cToken)].isComped == true, "market is not comped");
@@ -1188,6 +1203,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
         emit NewCompRate(oldRate, compRate);
         emit CompSpeedUpdated(cToken, newSpeed);
         
+        return uint(Error.NO_ERROR);
     }
 
     /**
@@ -1393,7 +1409,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
      * @notice Set the amount of COMP distributed per block
      * @param compRate_ The amount of COMP wei per block to distribute
      */
-    function _setCompRate(uint compRate_) public {
+    // function _setCompRate(uint compRate_) public {
         compRate_; //zzz
         revert("temporary disabled");
         // require(adminOrInitializing(), "only admin can change comp rate");
@@ -1403,7 +1419,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
         // emit NewCompRate(oldRate, compRate_);
 
         // refreshCompSpeedsInternal();
-    }
+    // }
 
     /**
      * @notice Add markets to compMarkets, allowing them to earn COMP in the flywheel
@@ -1484,7 +1500,9 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
      */
     function _setCollateralModel(CollateralModel _collateralModel) public{
         // Check caller is admin
-        require(msg.sender == admin, "UNAUTHORIZED");
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COLLATERAL_MODEL_OWNER_CHECK);
+        }
 
         require(_collateralModel.isCollateralModel() == true, "invalid CollateralModel");
 
