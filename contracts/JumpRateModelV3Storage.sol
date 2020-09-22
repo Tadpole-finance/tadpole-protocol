@@ -37,4 +37,9 @@ contract JumpRateModelV3Storage{
      * @notice The utilization point at which the jump multiplier is applied
      */
     uint public kink;
+
+    /**
+     * @notice constant to give more weight on the utilization for supply rate calculation
+     */
+    uint public supplyUtilConstant;
 }

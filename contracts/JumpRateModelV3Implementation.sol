@@ -27,6 +27,13 @@ contract JumpRateModelV3 is InterestRateModel, JumpRateModelV3Storage {
         updateJumpRateModelInternal(baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink_);
     }
 
+    function updateSupplyUtilConstant(uint newSupplyUtilConstant) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+        require(newSupplyUtilConstant <= 1e18, "newSupplyUtilConstant cant be bigger than 1e18");
+
+        supplyUtilConstant = newSupplyUtilConstant;
+    }
+
     /**
      * @notice Calculates the utilization rate of the market: `borrows / (cash + borrows - reserves)`
      * @param cash The amount of cash in the market
@@ -71,10 +78,13 @@ contract JumpRateModelV3 is InterestRateModel, JumpRateModelV3Storage {
      * @return The supply rate percentage per block as a mantissa (scaled by 1e18)
      */
     function getSupplyRate(uint cash, uint borrows, uint reserves, uint reserveFactorMantissa) public view returns (uint) {
+        uint util = utilizationRate(cash, borrows, reserves);
         uint oneMinusReserveFactor = uint(1e18).sub(reserveFactorMantissa);
         uint borrowRate = getBorrowRate(cash, borrows, reserves);
-        uint rateToPool = borrowRate.mul(oneMinusReserveFactor).div(1e18);
-        return rateToPool.sub(baseRatePerBlock);
+        uint borrowRateMinusbaseRatePerBlock = borrowRate.sub(baseRatePerBlock);
+        uint rateToPool = borrowRateMinusbaseRatePerBlock.mul(oneMinusReserveFactor).div(1e18);
+        uint supplyUtil = supplyUtilConstant.add(util).mul(uint(1e18).sub(supplyUtilConstant)).div(1e18);
+        return rateToPool.mul(supplyUtil).div(1e18);
     }
 
     /**
