@@ -137,4 +137,6 @@ contract ComptrollerCrediStorage is ComptrollerV3Storage{
     
     /// @notice A list of all underlying
     address[] public allUnderlying;
+
+    bool public createMarketIsEnabled = false;
 }

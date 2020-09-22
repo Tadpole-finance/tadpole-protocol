@@ -989,6 +989,25 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
         return uint(Error.NO_ERROR);
     }
 
+    function _enableCreateMarket() external returns (uint){
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_TOGGLE_CREATE_MARKET_OWNER_CHECK);
+        }
+
+        createMarketIsEnabled = true;
+    }
+
+
+    function _disableCreateMarket() external returns (uint){
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_TOGGLE_CREATE_MARKET_OWNER_CHECK);
+        }
+
+        createMarketIsEnabled = false;
+    }
+
     /**
       * @notice create market from ERC20 underlying and add it to the markets mapping and set it as listed
       * @dev function to create cErc20, set isListed and add support for the market
@@ -997,6 +1016,9 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
       */
 
     function createMarket(address _erc20Address) external returns (uint){
+
+        require(createMarketIsEnabled == true, "createMarket is disabled");
+
         Credi comp = Credi(getCompAddress());
         comp.transferFrom(msg.sender, address(0), newMarketCompFee);
 
