@@ -130,7 +130,7 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
     mapping(address => uint) public compAccrued;
 }
 
-contract ComptrollerCrediStorage is ComptrollerV3Storage{
+contract ComptrollerTadpoleStorage is ComptrollerV3Storage{
     CTokenFactory public cTokenFactory;
     uint256 public newMarketCompFee = 100e18;
     CollateralModel public collateralModel;

@@ -7,14 +7,14 @@ import "./PriceOracle.sol";
 import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
-import "./Governance/Credi.sol";
+import "./Governance/Tad.sol";
 import "./CTokenFactory.sol";
 
 /**
  * @title Compound's Comptroller Contract
  * @author Compound
  */
-contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, ComptrollerErrorReporter, Exponential {
+contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, ComptrollerErrorReporter, Exponential {
     /// @notice Emitted when an admin supports a market
     event MarketListed(CToken cToken);
 
@@ -1019,7 +1019,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
 
         require(createMarketIsEnabled == true, "createMarket is disabled");
 
-        Credi comp = Credi(getCompAddress());
+        Tad comp = Tad(getCompAddress());
         comp.transferFrom(msg.sender, address(0), newMarketCompFee);
 
         address cerc20Delegator = cTokenFactory.createCErc20Delegator(_erc20Address, this);
@@ -1369,7 +1369,7 @@ contract Comptroller is ComptrollerCrediStorage, ComptrollerInterface, Comptroll
      */
     function transferComp(address user, uint userAccrued, uint threshold) internal returns (uint) {
         if (userAccrued >= threshold && userAccrued > 0) {
-            Credi comp = Credi(getCompAddress());
+            Tad comp = Tad(getCompAddress());
             uint compRemaining = comp.balanceOf(address(this));
             if (userAccrued <= compRemaining) {
                 comp.transfer(user, userAccrued);

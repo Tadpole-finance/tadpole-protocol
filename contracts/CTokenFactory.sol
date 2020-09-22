@@ -12,8 +12,8 @@ contract CTokenFactory is Ownable {
     InterestRateModel cErc20InterestRateModel;
     address cErc20DelegatorImplementation;
     uint8 constant CErc20Decimal = 8;
-    string constant CErc20PrefixName = "Credi ";
-    string constant CErc20PrefixSymbol = "cr";
+    string constant CErc20PrefixName = "Tadpole ";
+    string constant CErc20PrefixSymbol = "t";
     bool constant public isFactory = true;
 
 
