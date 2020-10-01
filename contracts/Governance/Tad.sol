@@ -12,7 +12,7 @@ contract Tad {
     uint8 public constant decimals = 18;
 
     /// @notice Total number of tokens in circulation
-    uint public totalSupply = 10000000e18; // 10 million Comp
+    uint public totalSupply = 1000000e18; // 1 million TAD
 
     /// @notice Allowance amounts on behalf of others
     mapping (address => mapping (address => uint96)) internal allowances;
