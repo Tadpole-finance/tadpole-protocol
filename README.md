@@ -7,14 +7,14 @@ Tadpole Finance was initiated by forking Compound Finance project on Aug 28, 202
 
 To know more about this project, please read:
 
-* FAQ: https://tadpole.finance/faq.html
+* Docs: https://doc.tadpole.finance/
 
 For questions about interacting with Tapdole, please meet us at [our Telegram group](https://t.me/TadpoleFinance).
 
 Contributing
 ============
 
-Tadpole Finance is managed as an open source project. We invite all developers to participate in developing this project. As a reward, 10% of the TAD supply (Tadpole Finance platform token) will be distributed to developers who contribute to the Tadpole Finance codebase. This rewards program will last for 1 year, starting from November 2020.
+Tadpole Finance is managed as an open source project. We invite all developers to participate in developing this project. As a reward, 10% of the TAD supply (Tadpole Finance platform token) will be distributed to developers who contribute to the Tadpole Finance codebase. This rewards program will last for 1 year, starting from December 2020.
 
 Currently we are still defining rules and standards to join this collaboration. Mean while if you have any question let’s discuss them at dev Telegram group: https://t.me/TadpoleFinance.
 
