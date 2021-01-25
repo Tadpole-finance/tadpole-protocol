@@ -82,9 +82,16 @@ contract Tad {
      * @param spender The address of the account which may transfer tokens
      * @param rawAmount The number of tokens that are approved (2^256-1 means infinite)
      * @return Whether or not the approval succeeded
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint rawAmount) external returns (bool) {
         uint96 amount;
+        require(msg.sender != address(0), "Comp::approve: approve from the zero address");
+        require(spender != address(0), "Comp::approve: approve to the zero address");
         if (rawAmount == uint(-1)) {
             amount = uint96(-1);
         } else {
