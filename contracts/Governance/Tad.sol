@@ -238,23 +238,9 @@ contract Tad {
     }
     
     
-    /**
-     * @dev Moves tokens `amount` from `src` to `dst`.
-     *
-     * This is internal function is equivalent to {transfer}, and can be used to
-     * e.g. implement automatic token fees, slashing mechanisms, etc.
-     *
-     * Emits a {Transfer} event.
-     *
-     * Requirements:
-     *
-     * - `src` cannot be the zero address.
-     * - `dst` cannot be the zero address.
-     * - `src` must have a balance of at least `amount`.
-     */
     function _transferTokens(address src, address dst, uint96 amount) internal {
         require(src != address(0), "Comp::_transferTokens: cannot transfer from the zero address");
-        require(dst != address(0), "Comp::_transferTokens: cannot transfer to the zero address");
+        //require(dst != address(0), "Comp::_transferTokens: cannot transfer to the zero address");
 
         balances[src] = sub96(balances[src], amount, "Comp::_transferTokens: transfer amount exceeds balance");
         if(dst != address(0)) balances[dst] = add96(balances[dst], amount, "Comp::_transferTokens: transfer amount overflows");
