@@ -1215,9 +1215,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
             }
         }
         
-        //revert all changes if sum of compSpeeds exceeds compRate
-        require(newTotalCompRate_ <= compRate, "SUM compSpeeds > compRate");
-        
         uint oldRate = compRate;
         compRate = newTotalCompRate_;
 
