@@ -1,6 +1,5 @@
 pragma solidity ^0.5.16;
 
-import "./CToken.sol";
 import "./PriceOracle.sol";
 import "./CTokenFactory.sol";
 import "./CollateralModel.sol";
