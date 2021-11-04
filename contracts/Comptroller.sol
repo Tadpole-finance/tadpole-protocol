@@ -1273,7 +1273,7 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      */
     function updateCompSupplyIndex(address cToken) internal {
         CompMarketState storage supplyState = compSupplyState[cToken];
-        uint supplySpeed = compSpeeds[cToken];
+        uint supplySpeed = div_(mul_(compSpeeds[cToken], 70), 100); //supplySpeed = compSpeed * 70%
         uint blockNumber = getBlockNumber();
         uint deltaBlocks = sub_(blockNumber, uint(supplyState.block));
         if (deltaBlocks > 0 && supplySpeed > 0) {
@@ -1296,8 +1296,8 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      */
     function updateCompBorrowIndex(address cToken, Exp memory marketBorrowIndex) internal {
         CompMarketState storage borrowState = compBorrowState[cToken];
-        //uint borrowSpeed = compSpeeds[cToken];
-        uint borrowSpeed = 0;  //temporary set borrowSpeed to 0
+        uint borrowSpeed = div_(mul_(compSpeeds[cToken], 30), 100); //borrowSpeed = compSpeed * 30%
+        //uint borrowSpeed = 0;  //temporary set borrowSpeed to 0
         uint blockNumber = getBlockNumber();
         uint deltaBlocks = sub_(blockNumber, uint(borrowState.block));
         if (deltaBlocks > 0 && borrowSpeed > 0) {
@@ -1344,21 +1344,19 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      * @param borrower The address of the borrower to distribute COMP to
      */
     function distributeBorrowerComp(address cToken, address borrower, Exp memory marketBorrowIndex, bool distributeAll) internal {
-        //disabled
-        
-        // CompMarketState storage borrowState = compBorrowState[cToken];
-        // Double memory borrowIndex = Double({mantissa: borrowState.index});
-        // Double memory borrowerIndex = Double({mantissa: compBorrowerIndex[cToken][borrower]});
-        // compBorrowerIndex[cToken][borrower] = borrowIndex.mantissa;
+        CompMarketState storage borrowState = compBorrowState[cToken];
+        Double memory borrowIndex = Double({mantissa: borrowState.index});
+        Double memory borrowerIndex = Double({mantissa: compBorrowerIndex[cToken][borrower]});
+        compBorrowerIndex[cToken][borrower] = borrowIndex.mantissa;
 
-        // if (borrowerIndex.mantissa > 0) {
-        //     Double memory deltaIndex = sub_(borrowIndex, borrowerIndex);
-        //     uint borrowerAmount = div_(CToken(cToken).borrowBalanceStored(borrower), marketBorrowIndex);
-        //     uint borrowerDelta = mul_(borrowerAmount, deltaIndex);
-        //     uint borrowerAccrued = add_(compAccrued[borrower], borrowerDelta);
-        //     compAccrued[borrower] = transferComp(borrower, borrowerAccrued, distributeAll ? 0 : compClaimThreshold);
-        //     emit DistributedBorrowerComp(CToken(cToken), borrower, borrowerDelta, borrowIndex.mantissa);
-        // }
+        if (borrowerIndex.mantissa > 0) {
+            Double memory deltaIndex = sub_(borrowIndex, borrowerIndex);
+            uint borrowerAmount = div_(CToken(cToken).borrowBalanceStored(borrower), marketBorrowIndex);
+            uint borrowerDelta = mul_(borrowerAmount, deltaIndex);
+            uint borrowerAccrued = add_(compAccrued[borrower], borrowerDelta);
+            compAccrued[borrower] = transferComp(borrower, borrowerAccrued, distributeAll ? 0 : compClaimThreshold);
+            emit DistributedBorrowerComp(CToken(cToken), borrower, borrowerDelta, borrowIndex.mantissa);
+        }
     }
 
     /**
