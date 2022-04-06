@@ -6,7 +6,7 @@ import "../CToken.sol";
 import "../PriceOracle.sol";
 import "../EIP20Interface.sol";
 import "../Governance/GovernorAlpha.sol";
-import "../Governance/Comp.sol";
+import "../Governance/Tad.sol";
 
 interface ComptrollerLensInterface {
     function markets(address) external view returns (bool, uint);

@@ -39,7 +39,7 @@ contract PriceOracleV1 is Ownable, PriceOracle {
         prices[asset] = price;
     }
 
-    function setUnderlyingPrices(CToken[] cTokens, uint[] underlyingPricesMantissa) public {
+    function setUnderlyingPrices(CToken[] memory cTokens, uint[] memory underlyingPricesMantissa) public {
         
         senderMustBeReporter();
 
@@ -49,7 +49,7 @@ contract PriceOracleV1 is Ownable, PriceOracle {
         }
     }
 
-    function setDirectPrices(address[] assets, uint[] prices) public {
+    function setDirectPrices(address[] memory assets, uint[] memory prices) public {
         
         senderMustBeReporter();
 
