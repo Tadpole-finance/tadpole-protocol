@@ -6,8 +6,8 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorV3Interface.sol";
 
 contract SimplePriceOracleV2 is Ownable, PriceOracle {
-    mapping (address => uint)    prices;
-    mapping (address => address) chainlinkFeed;
+    mapping (address => uint)    public prices;
+    mapping (address => address) public chainlinkFeed;
 
     event PricePosted(address asset, uint previousPriceMantissa, uint requestedPriceMantissa, uint newPriceMantissa);
 
@@ -40,7 +40,12 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
         ) = priceFeed.latestRoundData();
-        return uint(price);
+        uint8 decimals = priceFeed.decimals();
+        uint priceMantissa = uint(price);
+        if ( decimals < 18 ) {
+            priceMantissa = priceMantissa * 10**(18 - uint(decimals));
+        }
+        return priceMantissa;
     }
 
     function setChainlinkFeed(CToken cToken, address chainlinkFeedAddress) external onlyOwner {
