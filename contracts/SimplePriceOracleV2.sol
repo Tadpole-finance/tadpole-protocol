@@ -14,9 +14,16 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
     constructor() public {
         // USDT
         prices[0x55d398326f99059fF775485246999027B3197955] = 1000000000000000000;
-
         // BUSD
         prices[0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56] = 1000000000000000000;
+
+        // Chainlink Feeds
+        // BNB
+        chainlinkFeed[0x0000000000000000000000000000000000000000] = 0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE;
+        // USDT
+        chainlinkFeed[0x55d398326f99059fF775485246999027B3197955] = 0xB97Ad0E74fa7d920791E90258A6E2085088b4320;
+        // BUSD
+        chainlinkFeed[0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56] = 0xcBb98864Ef56E9042e7d2efef76141f15731B82f;
     }
 
     function getUnderlyingPrice(CToken cToken) public view returns (uint) {
@@ -52,6 +59,10 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
         chainlinkFeed[underlyingAddress(cToken)] = chainlinkFeedAddress;
     }
 
+    function setUnderlyingChainlinkFeed(address underlying, address chainlinkFeedAddress) external onlyOwner {
+        chainlinkFeed[underlying] = chainlinkFeedAddress;
+    }
+
     function setUnderlyingPrice(CToken cToken, uint underlyingPriceMantissa) public onlyOwner {
         address asset = underlyingAddress(cToken);
         setDirectPrice(asset, underlyingPriceMantissa);
@@ -84,5 +95,6 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
     function compareStrings(string memory a, string memory b) internal pure returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
-
 }
+
+
