@@ -2,6 +2,7 @@ pragma solidity ^0.5.16;
 
 import "./PriceOracle.sol";
 import "./CErc20.sol";
+import "./EIP20Interface.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorV3Interface.sol";
 
@@ -27,18 +28,24 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
     }
 
     function getUnderlyingPrice(CToken cToken) public view returns (uint) {
+        address underlying = underlyingAddress(cToken);
+
         if (compareStrings(cToken.symbol(), "cETH")) {
             return 1e18;
 
-        } else if (chainlinkFeed[underlyingAddress(cToken)] != address(0)) {
-            return getChainlinkPrice(chainlinkFeed[underlyingAddress(cToken)]);
+        } else if (chainlinkFeed[underlying] != address(0)) {
+            uint tokenDecimals = 18;
+            if (underlying != address(0)) {
+                tokenDecimals = EIP20Interface(underlying).decimals();
+            }
+            return getChainlinkPrice(chainlinkFeed[underlying], tokenDecimals);
 
         } else {
-            return prices[address(CErc20(address(cToken)).underlying())];
+            return prices[underlying];
         }
     }
 
-    function getChainlinkPrice(address chainlinkFeedAddress) public view returns(uint) {
+    function getChainlinkPrice(address chainlinkFeedAddress, uint tokenDecimals) public view returns(uint) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(chainlinkFeedAddress);
         (
             /*uint80 roundID*/,
@@ -49,9 +56,9 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
         ) = priceFeed.latestRoundData();
         uint8 decimals = priceFeed.decimals();
         uint priceMantissa = uint(price);
-        if ( decimals < 18 ) {
-            priceMantissa = priceMantissa * 10**(18 - uint(decimals));
-        }
+        
+        priceMantissa = priceMantissa * 10**(36 - uint(decimals) - tokenDecimals);
+
         return priceMantissa;
     }
 
@@ -83,12 +90,19 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
     // v1 price oracle interface for use as backing of proxy
     function assetPrices(address asset) external view returns (uint) {
         if (chainlinkFeed[asset] != address(0)) {
-            return getChainlinkPrice(chainlinkFeed[asset]);
+            uint tokenDecimals = 18;
+            if (asset != address(0)) {
+                tokenDecimals = EIP20Interface(asset).decimals();
+            }
+            return getChainlinkPrice(chainlinkFeed[asset], tokenDecimals);
         }
         return prices[asset];
     }
 
     function underlyingAddress(CToken cToken) internal view returns (address) {
+        if (compareStrings(cToken.symbol(), "tadBNB")) {
+            return address(0);
+        }
         return address(CErc20(address(cToken)).underlying());
     }
 
