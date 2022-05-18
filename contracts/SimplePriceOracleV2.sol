@@ -30,10 +30,7 @@ contract SimplePriceOracleV2 is Ownable, PriceOracle {
     function getUnderlyingPrice(CToken cToken) public view returns (uint) {
         address underlying = underlyingAddress(cToken);
 
-        if (compareStrings(cToken.symbol(), "cETH")) {
-            return 1e18;
-
-        } else if (chainlinkFeed[underlying] != address(0)) {
+        if (chainlinkFeed[underlying] != address(0)) {
             uint tokenDecimals = 18;
             if (underlying != address(0)) {
                 tokenDecimals = EIP20Interface(underlying).decimals();
