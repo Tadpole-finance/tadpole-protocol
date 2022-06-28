@@ -16,6 +16,7 @@ interface ComptrollerLensInterface {
     function claimComp(address) external;
     function compAccrued(address) external view returns (uint);
     function compSpeeds(address) external view returns (uint);
+    function getcollateralFactorMantissa(address) external view returns (uint);
 }
 
 contract CompoundLens {
@@ -35,8 +36,8 @@ contract CompoundLens {
     function cTokenMetadata(CToken cToken) public view returns (CTokenMetadata memory) {
         uint exchangeRateStored = cToken.exchangeRateStored();
         ComptrollerLensInterface comptroller = ComptrollerLensInterface(address(cToken.comptroller()));
-        (, uint collateralFactorMantissa) = comptroller.markets(address(cToken));
         uint compSpeeds = comptroller.compSpeeds(address(cToken));
+        uint collateralFactorMantissa = comptroller.getcollateralFactorMantissa(address(cToken));
 
         return CTokenMetadata({
             cToken: address(cToken),
@@ -65,6 +66,7 @@ contract CompoundLens {
         address cToken;
         uint balanceOf;
         uint borrowBalanceCurrent;
+        uint borrowBalanceStored;
         uint balanceOfUnderlying;
         uint tokenBalance;
         uint tokenAllowance;
@@ -73,6 +75,7 @@ contract CompoundLens {
     function cTokenBalances(CToken cToken, address payable account) public returns (CTokenBalances memory) {
         uint balanceOf = cToken.balanceOf(account);
         uint borrowBalanceCurrent = cToken.borrowBalanceCurrent(account);
+        uint borrowBalanceStored = cToken.borrowBalanceStored(account);
         uint balanceOfUnderlying = cToken.balanceOfUnderlying(account);
         uint tokenBalance;
         uint tokenAllowance;
@@ -91,6 +94,7 @@ contract CompoundLens {
             cToken: address(cToken),
             balanceOf: balanceOf,
             borrowBalanceCurrent: borrowBalanceCurrent,
+            borrowBalanceStored: borrowBalanceStored,
             balanceOfUnderlying: balanceOfUnderlying,
             tokenBalance: tokenBalance,
             tokenAllowance: tokenAllowance
@@ -102,6 +106,26 @@ contract CompoundLens {
         CTokenBalances[] memory res = new CTokenBalances[](cTokenCount);
         for (uint i = 0; i < cTokenCount; i++) {
             res[i] = cTokenBalances(cTokens[i], account);
+        }
+        return res;
+    }
+
+    struct AccountLiquidity {
+        uint errorCode;
+        uint liquidity;
+        uint shortfall;
+    }
+
+    function getAccountLiquidityAll(ComptrollerLensInterface comptroller, address[] calldata addresses) external view returns (AccountLiquidity[] memory) {
+        uint addressCount = addresses.length;
+        AccountLiquidity[] memory res = new AccountLiquidity[](addressCount);
+        for (uint i = 0; i < addressCount; i++) {
+            (uint errorCode, uint liquidity, uint shortfall) = comptroller.getAccountLiquidity(addresses[i]);
+            res[i] = AccountLiquidity({
+                errorCode: errorCode,
+                liquidity: liquidity,
+                shortfall: shortfall
+            });
         }
         return res;
     }
