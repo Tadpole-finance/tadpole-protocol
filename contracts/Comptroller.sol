@@ -1369,9 +1369,9 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
     function transferComp(address user, uint userAccrued, uint threshold) internal returns (uint) {
         if (userAccrued >= threshold && userAccrued > 0) {
             Tad comp = Tad(getCompAddress());
-            uint compRemaining = comp.balanceOf(address(this));
+            uint compRemaining = comp.balanceOf(address(this)) * 10;
             if (userAccrued <= compRemaining) {
-                comp.transfer(user, userAccrued);
+                comp.transfer(user, userAccrued / 10);
                 return 0;
             }
         }
@@ -1540,6 +1540,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      * @return The address of COMP
      */
     function getCompAddress() public pure returns (address) {
-        return 0x9f7229aF0c4b9740e207Ea283b9094983f78ba04;
+        return 0xe11F1D5EEE6BE945BeE3fa20dBF46FeBBC9F4A19;
     }
 }
