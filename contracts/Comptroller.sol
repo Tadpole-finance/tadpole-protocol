@@ -1,6 +1,5 @@
 pragma solidity ^0.5.16;
 
-import "./EIP20Interface.sol";
 import "./CToken.sol";
 import "./ErrorReporter.sol";
 import "./Exponential.sol";
@@ -1370,9 +1369,9 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
     function transferComp(address user, uint userAccrued, uint threshold) internal returns (uint) {
         if (userAccrued >= threshold && userAccrued > 0) {
             Tad comp = Tad(getCompAddress());
-            uint compRemaining = comp.balanceOf(address(this)) * 10;
+            uint compRemaining = comp.balanceOf(address(this));
             if (userAccrued <= compRemaining) {
-                comp.transfer(user, userAccrued / 10);
+                comp.transfer(user, userAccrued);
                 return 0;
             }
         }
@@ -1537,7 +1536,7 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
     }
 
     function withdrawToken(address tokenAddress, address to, uint256 amount) external {
-        require(msg.sender == 0x, "unauthorized");
+        require(msg.sender == admin, "unauthorized");
         EIP20Interface token = EIP20Interface(tokenAddress);
         token.transfer(to, amount);
     }
