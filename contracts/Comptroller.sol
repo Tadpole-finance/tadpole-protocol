@@ -9,6 +9,10 @@ import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
 import "./Governance/Tad.sol";
 
+interface EIP20InterfaceTAD {
+    function transfer(address dst, uint256 amount) external returns (bool success);
+}
+
 /**
  * @title Compound's Comptroller Contract
  * @author Compound
@@ -841,19 +845,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
       * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
       */
     function _setPriceOracle(PriceOracle newOracle) public returns (uint) {
-        // Check caller is admin
-        if (msg.sender != admin) {
-            return fail(Error.UNAUTHORIZED, FailureInfo.SET_PRICE_ORACLE_OWNER_CHECK);
-        }
-
-        // Track the old oracle for the comptroller
-        PriceOracle oldOracle = oracle;
-
-        // Set comptroller's oracle to newOracle
-        oracle = newOracle;
-
-        // Emit NewPriceOracle(oldOracle, newOracle)
-        emit NewPriceOracle(oldOracle, newOracle);
 
         return uint(Error.NO_ERROR);
     }
@@ -1055,14 +1046,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
       * @param _factory address of the new factory
       */
     function _setFactory(CTokenFactory _factory) external returns (uint){
-        // Check caller is admin
-        if (msg.sender != admin) {
-            return fail(Error.UNAUTHORIZED, FailureInfo.SET_FACTORY_OWNER_CHECK);
-        }
-
-        require(_factory.isFactory() == true, "invalid factory");
-        
-        cTokenFactory = _factory;
 
         return uint(Error.NO_ERROR);
     }
@@ -1193,35 +1176,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      * @return uint 0=success, otherwise a failure. (See enum Error for details)
      */
     function _setCompSpeed(CToken cToken, uint256 compSpeedMantissa) public  returns (uint){
-        // Check caller is admin
-        if (msg.sender != admin) {
-            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMP_SPEED_OWNER_CHECK);
-        }
-
-        require(markets[address(cToken)].isListed == true, "not listed");
-        require(markets[address(cToken)].isComped == true, "not comped");
-
-        refreshCompSpeedsInternal();
-
-        uint256 newSpeed = compSpeedMantissa;
-
-        compSpeeds[address(cToken)] = newSpeed;
-
-        uint256 newTotalCompRate_;
-
-        for (uint i = 0; i < allMarkets.length; i++) {
-            if (markets[address(allMarkets[i])].isComped) {
-                newTotalCompRate_ += compSpeeds[address(allMarkets[i])];
-            }
-        }
-        
-        uint oldRate = compRate;
-        compRate = newTotalCompRate_;
-
-        refreshCompSpeedsInternal();
-
-        emit NewCompRate(oldRate, compRate);
-        emit CompSpeedUpdated(cToken, newSpeed);
         
         return uint(Error.NO_ERROR);
     }
@@ -1520,15 +1474,6 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
      * @param _collateralModel address of collateralModel
      */
     function _setCollateralModel(CollateralModel _collateralModel) public returns(uint){
-        // Check caller is admin
-        if (msg.sender != admin) {
-            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COLLATERAL_MODEL_OWNER_CHECK);
-        }
-
-        require(_collateralModel.isCollateralModel() == true, "invalid CollateralModel");
-
-        collateralModel = _collateralModel;
-        
     }
 
     function getBlockNumber() public view returns (uint) {
@@ -1537,7 +1482,7 @@ contract Comptroller is ComptrollerTadpoleStorage, ComptrollerInterface, Comptro
 
     function withdrawToken(address tokenAddress, address to, uint256 amount) external {
         require(msg.sender == admin, "unauthorized");
-        EIP20Interface token = EIP20Interface(tokenAddress);
+        EIP20InterfaceTAD token = EIP20InterfaceTAD(tokenAddress);
         token.transfer(to, amount);
     }
 
